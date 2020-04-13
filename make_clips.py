@@ -43,8 +43,8 @@ videos = os.listdir(opt.video_folder)
 videos = list(filter(lambda vid:os.path.isfile(os.path.join(opt.video_folder, vid)),
                      videos))
 vid = videos[opt.video_file_index]
-#write, start = opt.write, opt.start
-write, start = 1,23
+write, start = opt.write, opt.start
+#write, start = 1,23
 if write == 0:
     delay=1
     output_path=None
