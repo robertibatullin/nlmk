@@ -238,18 +238,31 @@ class FractionClassifier():
                                     break
                                 elif k == 32:
                                     detect = not detect
-                                elif k == 81 and window.left>step: #left arrow
+                                elif k == ord('a') and window.left>step: #left arrow
                                     window.left -= step
                                     window.right -= step
-                                elif k == 83 and window.right<w-step: #right arrow
+                                elif k == ord('d') and window.right<w-step: #right arrow
                                     window.left += step
                                     window.right += step
-                                elif k == 82 and window.top>step: #up arrow
+                                elif k == ord('w') and window.top>step: #up arrow
                                     window.top -= step
                                     window.bottom -= step
-                                elif k == 84 and window.bottom<h-step: #down arrow
+                                elif k == ord('s') and window.bottom<h-step: #down arrow
                                     window.top += step
                                     window.bottom += step
+
+#                                elif k == 81 and window.left>step: #left arrow
+#                                    window.left -= step
+#                                    window.right -= step
+#                                elif k == 83 and window.right<w-step: #right arrow
+#                                    window.left += step
+#                                    window.right += step
+#                                elif k == 82 and window.top>step: #up arrow
+#                                    window.top -= step
+#                                    window.bottom -= step
+#                                elif k == 84 and window.bottom<h-step: #down arrow
+#                                    window.top += step
+#                                    window.bottom += step
                     else:
                         print(f'time is out',file=open('log.log','a'))
                         break
