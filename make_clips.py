@@ -41,6 +41,7 @@ videos = os.listdir(opt.video_folder)
 videos = list(filter(lambda vid:os.path.isfile(os.path.join(opt.video_folder, vid)),
                      videos))
 vid = videos[opt.video_file_index]
+vid_name = '.'.join(vid.split('.')[:-1])
 write, start = opt.write, opt.start
 if write == 0:
     delay=1
@@ -48,8 +49,8 @@ if write == 0:
     start_time=0
 elif write == 1:
     delay=opt.delay
-    output_path = vid.split('.')[0]+'.avi'
-    mp4_path = vid.split('.')[0]+'.mp4'
+    output_path = vid_name+'.avi'
+    mp4_path = vid_name+'.mp4'
     start_time=start
 path = os.path.join(opt.video_folder, vid)
 fc.process_video(path, 
@@ -62,4 +63,4 @@ if write==1:
     check_call(["ffmpeg","-y","-i",
             output_path,"-s",
             "640x480",mp4_path])
-    check_call(["rm", output_path])
+    os.remove(output_path)
