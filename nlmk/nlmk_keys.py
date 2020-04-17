@@ -21,7 +21,7 @@ data_transform = transforms.Compose([
     transforms.ToTensor()
     ])
 
-random_crop = transforms.RandomCrop(32)    
+random_crop = transforms.RandomCrop(32)
 
 class ROI():
     def __init__(self, rect):
@@ -77,23 +77,6 @@ class FractionClassifier():
         self.net = self.net.float()
         self.net.load_state_dict(torch.load(model_path))
         self.net.eval()
-        
-    def mouse_control(self, event, x, y, flags, param):
-        w,h = self.window.size()
-        left = x-w//2
-        right = x+w//2
-        top = y-h//2
-        bottom = y+h//2
-        if left >= 0 and right < self.frame.shape[1]:
-            self.window.left = left
-            self.window.right = right
-        if top >= 0 and bottom < self.frame.shape[0]:
-            self.window.top = top
-            self.window.bottom = bottom
-        if event == cv2.EVENT_LBUTTONDOWN:
-            self.detect = True
-        elif event == cv2.EVENT_LBUTTONUP:
-            self.detect = False
         
     def get_fraction(self, arr, n_crops=5):
         crops = []
@@ -152,9 +135,8 @@ class FractionClassifier():
             if to_show:
                 cv2.namedWindow('Classification result', cv2.WND_PROP_FULLSCREEN)
                 cv2.setWindowProperty("Classification result", cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
-                cv2.setMouseCallback("Classification result", self.mouse_control)
             to_write = (output_path is not None)
-            self.detect = not (to_show or to_write)
+            detect = not (to_show or to_write)
     
             if to_write:
                 ext = output_path.split('.')[-1]
@@ -167,13 +149,12 @@ class FractionClassifier():
             window_top, window_bottom = h//2, h//2 + window_height
             window_width = int(w*0.4)
             window_left, window_right = w//2-window_width//2, w//2+window_width//2
-            print(window_left, window_top, window_right, window_bottom)
-            self.window = ROI((window_left, window_top, window_right, window_bottom))
+            window = ROI((window_left, window_top, window_right, window_bottom))
             roi_resize = (int((window_right-window_left)*scale),
                           int((window_bottom-window_top)*scale))
         
             while cap.isOpened():
-                ret, self.frame = cap.read()
+                ret, frame = cap.read()
                 if ret is False:
                     print('ret false',file=open('log.log','a'))
                     break
@@ -181,20 +162,20 @@ class FractionClassifier():
                     time = cap.get(cv2.CAP_PROP_POS_MSEC)/1000
                     timestr = f'Time: {time:.1f} s'
                     if end_time is None or time <= end_time:
-                        if self.detect:
+                        if detect:
 #                            print(window.left//2+window.right//2,
 #                                  window.top//2+window.bottom//2,
 #                                  file=open('window_track.txt','a'))
-                            roi_left = ROI((self.window.left,
-                                            self.window.top,
-                                            self.window.left+int(self.window.size()[0]*0.4),
-                                            self.window.bottom))
-                            roi_right = ROI((self.window.left+int(self.window.size()[0]*0.6),
-                                            self.window.top,
-                                            self.window.right,
-                                            self.window.bottom))
+                            roi_left = ROI((window.left,
+                                            window.top,
+                                            window.left+int(window.size()[0]*0.4),
+                                            window.bottom))
+                            roi_right = ROI((window.left+int(window.size()[0]*0.6),
+                                            window.top,
+                                            window.right,
+                                            window.bottom))
                             for roi in (roi_left, roi_right):
-                                roi.set_source(self.frame)
+                                roi.set_source(frame)
                                 roi.resize(roi_resize)
                             roi = np.concatenate((roi_left.img, roi_right.img), axis=1)
                             fraction, proba = self.get_fraction(roi)
@@ -210,43 +191,43 @@ class FractionClassifier():
                             if to_print:
                                 print( f'Time: {time:.2f} s\tFraction: {fraction}\tProbability: {proba:.3f}' )
                         if to_show or to_write:
-                            display = self.frame
-                            if not self.detect:
+                            display = frame
+                            if not detect:
                                 clr = (255,255,255)
                                 cv2.putText(display, 'Detection OFF',
-                                            (self.window.left, self.window.top-4),
+                                            (window.left, window.top-4),
                                             cv2.FONT_HERSHEY_SIMPLEX,
                                             1, clr, 2)
                             else:
-                                text_bottom = self.window.bottom-4
-                                text_width = (self.window.size()[0]-4)//self.n_classes
+                                text_bottom = window.bottom-4
+                                text_width = (window.size()[0]-4)//self.n_classes
                                 try:
                                     idx = classes.index(fraction)
                                     clr = colors[idx]
-                                    text_left = self.window.left + 4 + idx*text_width
+                                    text_left = window.left + 4 + idx*text_width
                                 except Exception:
                                     clr = (0,0,0)
-                                    text_left = self.window.left//2 + self.window.right//2 - text_width//2                            
+                                    text_left = window.left//2 + window.right//2 - text_width//2                            
                                 cv2.putText(display, 'Detection ON',
-                                            (self.window.left, self.window.top-4),
+                                            (window.left, window.top-4),
                                             cv2.FONT_HERSHEY_SIMPLEX,
                                             1, clr, 2)
                                 cv2.putText(display, fraction,
                                             (text_left, text_bottom),
                                             cv2.FONT_HERSHEY_SIMPLEX,
                                             2, clr, 4)
-                            cv2.rectangle(display, (self.window.left, self.window.top),
-                                          (self.window.right, self.window.bottom),
+                            cv2.rectangle(display, (window.left, window.top),
+                                          (window.right, window.bottom),
                                           clr, 2 )
                             cv2.putText(display, timestr,
-                                        (self.window.left//2 + self.window.right//2, 
-                                         self.window.top-4),
+                                        (window.left//2 + window.right//2, 
+                                         window.top-4),
                                         cv2.FONT_HERSHEY_SIMPLEX,
                                         1, clr, 2)
                             if to_write:
                                 out.write(display)
                             else:
-                                cv2.putText(display, 'Esc to quit. Left mouse button to turn on detection',
+                                cv2.putText(display, 'Press Esc to quit, Space to start/stop detection',
                                             (4, h-8),
                                             cv2.FONT_HERSHEY_SIMPLEX,
                                             2, (255,255,255), 2)
@@ -255,6 +236,20 @@ class FractionClassifier():
                                 k = cv2.waitKey(delay) & 0xFF
                                 if k == 27:
                                     break
+                                elif k == 32:
+                                    detect = not detect
+                                elif k == 81 and window.left>step: #left arrow
+                                    window.left -= step
+                                    window.right -= step
+                                elif k == 83 and window.right<w-step: #right arrow
+                                    window.left += step
+                                    window.right += step
+                                elif k == 82 and window.top>step: #up arrow
+                                    window.top -= step
+                                    window.bottom -= step
+                                elif k == 84 and window.bottom<h-step: #down arrow
+                                    window.top += step
+                                    window.bottom += step
                     else:
                         print(f'time is out',file=open('log.log','a'))
                         break
