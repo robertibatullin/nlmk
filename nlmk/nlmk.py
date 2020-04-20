@@ -13,7 +13,6 @@ from torchvision import transforms
 
 classes = ['0-10','10-20','20-40','40-70', 'scrap']
 colors = [(0,0,255), (0,200,255), (0,255,0), (255,0,0), (150,150,150)]
-step = 20 #сдвиг окна в ответ на нажатие стрелки
 original_size = {'w':1920, 'h':1080}
 
 data_transform = transforms.Compose([
@@ -167,7 +166,6 @@ class FractionClassifier():
             window_top, window_bottom = h//2, h//2 + window_height
             window_width = int(w*0.4)
             window_left, window_right = w//2-window_width//2, w//2+window_width//2
-            print(window_left, window_top, window_right, window_bottom)
             self.window = ROI((window_left, window_top, window_right, window_bottom))
             roi_resize = (int((window_right-window_left)*scale),
                           int((window_bottom-window_top)*scale))
